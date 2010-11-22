@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>Extbase Utilities</string>
+	<key>ordering</key>
+	<array>
+		<string>B54F0978-1890-4204-A524-58AC9CD7087E</string>
+	</array>
+	<key>uuid</key>
+	<string>5F8DB183-72EF-41D7-AE2C-9D682BC87C14</string>
+</dict>
+</plist>

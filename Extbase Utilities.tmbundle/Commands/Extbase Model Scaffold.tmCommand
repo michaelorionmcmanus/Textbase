@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/env php 
+&lt;?php
+/**
+ * @author Michael McManus, &lt;michaelorionmcmanus@gmail.com&gt;
+ * 
+ * Very basic command that will help you write Extbase models quickly.
+ *
+ * ======= EXAMPLES =========
+ *
+ * Usage is very straight forward. Write a parameter using underscores, highlight the word and 
+ * press 'cmd + m' to generate the model code for that parameter.
+ * 
+ * Running the command on 'banana_peel' would generate the following code 
+ * (note: there are extra '/**', doc block initiators, here. We're getting  
+ * a little meta here in the documentation with nested doc blocks, sorry for the clutter!):
+ * 
+ * 	/**
+ * 	 * bananaPeel
+ * 	 * @var int|string|object
+ * 	 */
+/** 	 protected $bananaPeel; 
+ * 	
+ * 	 /**
+ * 	 * Setter for bananaPeel
+ * 	 * @param int|string|object $bananaPeel tell us about this parameter
+ * 	 * @return void
+ * 	 */
+/** 	 public function setBananaPeel($bananaPeel) {
+ * 	 	$this-&gt;bananaPeel = $bananaPeel;
+ * 	 }
+ * 	
+ * 	 /**
+ * 	 * Getter for bananaPeel
+ * 	 * @return int|string|object
+ * 	 */
+/** 	 public function getBananaPeel() {
+ * 	 	return $this-&gt;bananaPeel; 
+ * 	 }
+ *
+ * You can then tab through to each 'int|string|object', so that you can quickly
+ * specify the type for the annotations.
+ *
+ *
+ * You can pass specify that a parameter is a related object by appeding a semi-colon,
+ * followed by the relation's class name. Notice that you will also get the line you need
+ * to place in your model's constructor to initialize the storage object 
+ * for your relation. For example, 'banana_peel:Tx_BananaTree_Domain_Model_Banana'
+ * would generate the following code:
+ * 
+ * 
+ *	/**
+ *	* bananaPeel
+ *	* @var Tx_Extbase_Persistence_ObjectStorage&lt;Tx_BananaTree_Domain_Model_Banana&gt;
+ *	*/
+/**	protected $bananaPeel; 
+ *	
+ *	/**
+ *	* Setter for bananaPeel
+ *	* @param Tx_Extbase_Persistence_ObjectStorage&lt;Tx_BananaTree_Domain_Model_Banana&gt;
+ *	* @return void
+ *	*/
+/**	public function setBananaPeel(Tx_Extbase_Persistence_ObjectStorage $bananaPeel) {
+ *		$this-&gt;bananaPeel = $bananaPeel;
+ *	}
+ *	
+ *	/**
+ *	* Getter for bananaPeel
+ *	* @return Tx_Extbase_Persistence_ObjectStorage&lt;Tx_BananaTree_Domain_Model_Banana&gt;
+ *	*/
+/**	public function getBananaPeel() {
+ *		return $this-&gt;bananaPeel; 
+ *	}
+ *	
+ *	//Put this in your model's constructor!
+ *		$this-&gt;bananaPeel = new Tx_Extbase_Persistence_ObjectStorage();
+ */
+
+$document = file_get_contents('php://stdin'); 
+$lines    = explode("\n", $document); 
+$filename = $_ENV['TM_FILENAME'];
+$word = $_ENV['TM_SELECTED_TEXT'];
+$relation = explode(':', $word);
+if(count($relation) &gt; 1) {
+	$word = $relation[0];
+}
+
+$getString = buildGetString($word);
+$setString = buildSetString($word);
+
+$camelWord = to_camel_case($word);
+$wordAsVariable = '\$'.$camelWord;
+
+printPropertyString($camelWord, $wordAsVariable, $relation);
+echo "\n";
+printSetter($camelWord, $wordAsVariable, $setString, $relation);
+echo "\n";
+printGetter($camelWord, $wordAsVariable, $getString, $relation);
+echo "\n";
+if(count($relation) &gt; 1) {
+	printConstructorString($camelWord);
+}
+
+function printConstructorString($property) {
+	echo '//Put this in your model\'s constructor!'."\n";
+	echo "\t".'\$this-&gt;'.$property.' = new Tx_Extbase_Persistence_ObjectStorage();';
+	echo "\n";
+}
+
+function printPropertyString($property, $variable, $relation) {
+	echo '/**'."\n";
+	echo '* '.$property."\n";
+	// If $relation is greater than one, then it means that we're going to set-up an extbase relation
+	if(count($relation) &gt; 1) {
+		echo '* @var Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
+	} else {
+		echo '* @var ${1:'.e_sn('int|string|object').'}'."\n";
+	}
+	echo '*/'."\n";
+	echo 'protected '.$variable."; \n";
+}
+
+function printSetter($property, $variable, $setString, $relation) {
+	echo '/**'."\n";
+	echo '* Setter for '.$property."\n";
+	if(count($relation) &gt; 1) {
+		echo '* @param Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
+	} else {
+		echo '* @param ${2:'.e_sn('int|string|object').'} '.$variable.' ${3:'.e_sn('tell us about this parameter').'}'."\n";
+	}
+	echo '* @return void'."\n";
+	echo '*/'."\n";
+	if(count($relation) &gt; 1) {
+		echo 'public function '.$setString.'(Tx_Extbase_Persistence_ObjectStorage '.$variable.') {'."\n";
+	} else {
+		echo 'public function '.$setString.'('.$variable.') {'."\n";
+	}
+	echo "\t".'\$this-&gt;'.$property.' = '.$variable.';'."\n";
+	echo '}'."\n";
+}
+
+function printGetter($property, $variable, $setString, $relation) {
+	echo '/**'."\n";
+	echo '* Getter for '.$property."\n";
+	if(count($relation) &gt; 1) {
+		echo '* @return Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
+	} else {
+		echo '* @return ${4:'.e_sn('int|string|object').'}'."\n";
+	}
+	echo '*/'."\n";
+	echo 'public function '.$setString.'() {'."\n";
+	echo "\t".'return \$this-&gt;'.$property."; \n";
+	echo '}'."\n";
+}
+
+// escape text for use in a TextMate snippet 
+function e_sn($str) { 
+   return preg_replace('/[$`\\\\]/', '\\', $str); 
+}
+
+function buildGetString($word) {
+	$out = to_camel_case('get_'.$word);
+	
+	return $out;
+}
+
+function buildSetString($word) {
+	$out = to_camel_case('set_'.$word);
+	
+	return $out;
+}
+
+/**
+ * Translates a camel case string into a string with underscores (e.g. firstName -&amp;gt; first_name)
+ * @param    string   $str    String in camel case format
+ * @return    string          $str Translated into underscore format
+ */
+function from_camel_case($str) {
+  $str[0] = strtolower($str[0]);
+  $func = create_function('$c', 'return "_" . strtolower($c[1]);');
+  return preg_replace_callback('/([A-Z])/', $func, $str);
+}
+
+/**
+ * Translates a string with underscores into camel case (e.g. first_name -&amp;gt; firstName)
+ * @param    string   $str                     String in underscore format
+ * @param    bool     $capitalise_first_char   If true, capitalise the first char in $str
+ * @return   string                              $str translated into camel caps
+ */
+function to_camel_case($str, $capitalise_first_char = false) {
+  if($capitalise_first_char) {
+    $str[0] = strtoupper($str[0]);
+  }
+  $func = create_function('$c', 'return strtoupper($c[1]);');
+  return preg_replace_callback('/_([a-z])/', $func, $str);
+}
+
+
+?&gt;</string>
+	<key>fallbackInput</key>
+	<string>line</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>keyEquivalent</key>
+	<string>@M</string>
+	<key>name</key>
+	<string>Extbase Model Scaffold</string>
+	<key>output</key>
+	<string>insertAsSnippet</string>
+	<key>tabTrigger</key>
+	<string>extmodel</string>
+	<key>uuid</key>
+	<string>B54F0978-1890-4204-A524-58AC9CD7087E</string>
+</dict>
+</plist>
