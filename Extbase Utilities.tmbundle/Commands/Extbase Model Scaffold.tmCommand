@@ -15,7 +15,7 @@
  * ======= EXAMPLES =========
  *
  * Usage is very straight forward. Write a parameter using underscores, highlight the word and 
- * press 'cmd + m' to generate the model code for that parameter.
+ * press 'shift + cmd + m' to generate the model code for that parameter.
  * 
  * Running the command on 'banana_peel' would generate the following code 
  * (note: there are extra '/**', doc block initiators, here. We're getting  
@@ -51,13 +51,16 @@
  * You can pass specify that a parameter is a related object by appeding a semi-colon,
  * followed by the relation's class name. Notice that you will also get the line you need
  * to place in your model's constructor to initialize the storage object 
- * for your relation. For example, 'banana_peel:Tx_BananaTree_Domain_Model_Banana'
- * would generate the following code:
+ * for your relation. Finally (and this is highly recommended!) you can specify that 
+ * the relation should be fetched lazily by appending ':lazy.' 
+ * For example, 'banana_peel:Tx_BananaTree_Domain_Model_Banana' would generate the following code:
  * 
  * 
  *	/**
  *	* bananaPeel
  *	* @var Tx_Extbase_Persistence_ObjectStorage&lt;Tx_BananaTree_Domain_Model_Banana&gt;
+ *  * NOTE: If you had performed the command on 'banana_peel:Tx_BananaTree_Domain_Model_Banana:lazy'
+ *  * you would also get a '@lazy' annotation here.  
  *	*/
 /**	protected $bananaPeel; 
  *	
@@ -121,6 +124,9 @@ function printPropertyString($property, $variable, $relation) {
 		echo '* @var Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
 	} else {
 		echo '* @var ${1:'.e_sn('int|string|object').'}'."\n";
+	}
+	if($relation[2] == 'lazy') {
+		echo '* @lazy'."\n";
 	}
 	echo '*/'."\n";
 	echo 'protected '.$variable."; \n";
