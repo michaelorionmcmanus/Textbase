@@ -15,7 +15,7 @@
  * ======= EXAMPLES =========
  *
  * Usage is very straight forward. Write a parameter using underscores, highlight the word and 
- * press 'cmd + m' to generate the model code for that parameter.
+ * press 'shift + cmd + m' to generate the model code for that parameter.
  * 
  * Running the command on 'banana_peel' would generate the following code 
  * (note: there are extra '/**', doc block initiators, here. We're getting  
@@ -51,13 +51,16 @@
  * You can pass specify that a parameter is a related object by appeding a semi-colon,
  * followed by the relation's class name. Notice that you will also get the line you need
  * to place in your model's constructor to initialize the storage object 
- * for your relation. For example, 'banana_peel:Tx_BananaTree_Domain_Model_Banana'
- * would generate the following code:
+ * for your relation. Finally (and this is highly recommended!) you can specify that 
+ * the relation should be fetched lazily by appending ':lazy.' 
+ * For example, 'banana_peel:Tx_BananaTree_Domain_Model_Banana' would generate the following code:
  * 
  * 
  *	/**
  *	* bananaPeel
  *	* @var Tx_Extbase_Persistence_ObjectStorage&lt;Tx_BananaTree_Domain_Model_Banana&gt;
+ *  * NOTE: If you had performed the command on 'banana_peel:Tx_BananaTree_Domain_Model_Banana:lazy'
+ *  * you would also get a '@lazy' annotation here.  
  *	*/
 /**	protected $bananaPeel; 
  *	
@@ -122,6 +125,9 @@ function printPropertyString($property, $variable, $relation) {
 	} else {
 		echo '* @var ${1:'.e_sn('int|string|object').'}'."\n";
 	}
+	if($relation[2] == 'lazy') {
+		echo '* @lazy'."\n";
+	}
 	echo '*/'."\n";
 	echo 'protected '.$variable."; \n";
 }
@@ -132,7 +138,7 @@ function printSetter($property, $variable, $setString, $relation) {
 	if(count($relation) &gt; 1) {
 		echo '* @param Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
 	} else {
-		echo '* @param ${2:'.e_sn('int|string|object').'} '.$variable.' ${3:'.e_sn('tell us about this parameter').'}'."\n";
+		echo '* @param ${1:'.e_sn('int|string|object').'} '.$variable.' ${2:'.e_sn('tell us about this parameter').'}'."\n";
 	}
 	echo '* @return void'."\n";
 	echo '*/'."\n";
@@ -151,7 +157,7 @@ function printGetter($property, $variable, $setString, $relation) {
 	if(count($relation) &gt; 1) {
 		echo '* @return Tx_Extbase_Persistence_ObjectStorage&lt;'.$relation[1].'&gt;'."\n";
 	} else {
-		echo '* @return ${4:'.e_sn('int|string|object').'}'."\n";
+		echo '* @return ${1:'.e_sn('int|string|object').'}'."\n";
 	}
 	echo '*/'."\n";
 	echo 'public function '.$setString.'() {'."\n";
@@ -208,7 +214,7 @@ function to_camel_case($str, $capitalise_first_char = false) {
 	<key>input</key>
 	<string>selection</string>
 	<key>keyEquivalent</key>
-	<string>@M</string>
+	<string>~M</string>
 	<key>name</key>
 	<string>Extbase Model Scaffold</string>
 	<key>output</key>
